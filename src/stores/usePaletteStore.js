@@ -1,3 +1,8 @@
+// Gestion d’état centralisée avec Pinia.
+// Gère les palettes de couleurs (CRUD) et les interactions avec Firebase.
+// Permet de partager l’état des palettes entre plusieurs composants.
+
+
 import { defineStore } from "pinia";
 import { ref } from "vue"; 
 import FirebaseService from "@/services/FirebaseService.js";

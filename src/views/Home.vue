@@ -1,3 +1,11 @@
+// Vues associés aux routes définies
+// Gère l'affichage et la logique de la page d'accueil.
+//-----------------------------------------------------------------
+// Le routeur affiche des vues qui utilisent des composants pour afficher l interface utilisateur
+// Les composants & les vues utilisent les stores pour accéder à l état global (exemple : obtenir la liste des palettes / utilisateur connecté).
+// Ces stores, à leur tour, appellent les méthodes définies dans services pour interagir avec Firebase.
+//-----------------------------------------------------------------
+
 <template>
   <div>
     <!-- Barre d'outils -->
@@ -48,14 +56,8 @@
         class="palette-card"
         @click="handlePaletteClick(palette, $event)"
       >
-        <!-- Boutons d'action (Modifier / Supprimer) superposés -->
+        <!-- Bouton supprimer -->
         <div class="palette-actions" @click.stop>
-          <Button
-            v-if="user && user.uid === palette.createdBy"
-            icon="pi pi-pencil"
-            class="p-button-text"
-            @click="editPalette(palette)"
-          />
           <Button
             v-if="user && user.uid === palette.createdBy"
             icon="pi pi-trash"

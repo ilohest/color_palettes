@@ -1,3 +1,8 @@
+// Contient la logique de communication avec Firebase: les services interagissent avec des APIs externes
+// Ce fichier contient les fonctions pour gérer l'authentification, les palettes et les utilisateurs sur Firebase.
+// Ces méthodes encapsulent les appels aux API Firebase (Realtime Database, Auth, etc.) et facilitent leur utilisation dans les composants / stores.
+//------------------------------------------------------------------------------------------------------------------------------------------------
+
 import { db, auth } from "./FirebaseConfig.js";
 import { ref, set, push, onValue, remove } from "firebase/database";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
@@ -42,7 +47,7 @@ export default class FirebaseService {
       createdAt: new Date().toISOString(),
     };
   
-    console.log("🔥 FirebaseService.js : Enregistrement de la palette sur Firebase :", newPalette);
+    //console.log("🔥 FirebaseService.js : Enregistrement de la palette sur Firebase :", newPalette);
     return set(newPaletteRef, newPalette);
   }
   
@@ -51,8 +56,8 @@ export default class FirebaseService {
    static async deletePalette(palette) {
       const user = this.getCurrentUser();
 
-      console.log("🔍 FirebaseService.js : Suppression demandée par :", user ? user.uid : "Aucun utilisateur détecté");
-      console.log("📌 FirebaseService.js : Propriétaire de la palette :", palette.createdBy);
+      //console.log("🔍 FirebaseService.js : Suppression demandée par :", user ? user.uid : "Aucun utilisateur détecté");
+      //console.log("📌 FirebaseService.js : Propriétaire de la palette :", palette.createdBy);
       
       if (!user) {
         throw new Error("Utilisateur non connecté !");
@@ -86,9 +91,9 @@ export default class FirebaseService {
     });
   }
 
+  // 🔥 Mettre à jour une palette
   static async updatePalette(palette) {
     const paletteRef = ref(db, `palettes/${palette.id}`);
     return set(paletteRef, palette);
-  }
-  
+  }  
 }

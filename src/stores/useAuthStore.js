@@ -1,3 +1,7 @@
+// Gestion d’état centralisée avec Pinia.
+// Stocke l'utilisateur connecté et gère les actions d'authentificationn (connexion, déconnexion).
+//-----------------------------------------------------------------------------------------------
+
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { auth } from "@/services/FirebaseConfig.js"; // Import Firebase Auth

@@ -1,3 +1,10 @@
+// Composant racine qui enveloppe l'ensemble de l'application.
+// Il contient la structure globale : barre de navigation et composant de routage. Sert de conteneur pour les vues principales.
+// Il est responsable de l'initialisation de l'écoute des changements d'authentification.
+// Il définit les styles globaux de l'application.
+// Il définit les variables CSS personnalisées pour les boutons PrimeVue.
+// ------------------------------------------------------------------------------------------------
+
 <template>
   <div>
     <Navbar />

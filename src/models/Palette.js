@@ -1,5 +1,9 @@
 // Modèle objet pour une palette de couleurs
+// Pour structurer et valider les données avant de les enregistrer ou après les avoir récupérées de Firebase
+//------------------------------------------------------------
+
 export default class Palette {
+    // Propriétés de la classe
     constructor(id, colors, createdBy, createdAt = null) {
       this.id = id; // L'identifiant Firebase (optionnel pour les nouvelles palettes)
       this.colors = colors;
@@ -7,7 +11,8 @@ export default class Palette {
       this.createdAt = createdAt || new Date().toISOString();
     }
   
-    // Vérifie que chaque couleur est au format hexadécimal (ex: "#AABBCC")
+    // Méthodes de la classe
+    // ✅ Vérifie que chaque couleur est au format hexadécimal (ex: "#AABBCC")
     isValid() {
         return (
         //Array.isArray(this.colors) &&

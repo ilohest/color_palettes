@@ -1,165 +1,236 @@
+// Code pour le formulaire de création / modification de palette
+// émet des événements "save" et "close" pour enregistrer ou fermer le formulaire
+//--------------------------------------------------------------------------------
+
 <template>
-  <div class="overlay" @click.self="closeForm">
-    <div class="popup">
-      <h2>{{ isEditing ? "Modifier la palette" : "Créer une palette" }}</h2>
-
-      <!-- Input URL pour importer une palette -->
-      <input
-        v-model="paletteUrl"
-        placeholder="Collez l'URL de la palette (ex: https://coolors.co/36213e-554971-63768d-8ac6d0-b8f3ff)"
-        @input="parseUrl"
-        class="url-input"
-      />
-
-      <!-- Aperçu des couleurs extraites -->
-      <div v-if="extractedColors.length" class="extracted-colors">
-        <p>Couleurs extraites :</p>
-        <div class="color-preview"
-             v-for="(color, index) in extractedColors"
-             :key="index"
-             :style="{ backgroundColor: color }">
-          {{ color }}
+  <div class="p-dialog-mask" @click.self="closeForm">
+    <div class="p-dialog">
+      <div class="p-dialog-header">
+        <span class="p-dialog-title">Créer une palette</span>
+        <Button icon="pi pi-times" class="p-dialog-header-icon" @click="closeForm" />
+      </div>
+      <div class="p-dialog-content">
+        <!-- Input URL pour importer une palette -->
+        <div class="p-field">
+          <InputText
+            v-model="paletteUrl"
+            placeholder="Collez l'URL de la palette Coolors.co"
+            @input="parseUrl"
+            class="url-input"
+          />
         </div>
-      </div>
 
-      <!-- Champs de saisie pour les couleurs (précédemment extraites ou saisis manuellement) -->
-      <div v-for="(color, index) in localColors" :key="index" class="color-input">
-        <input
-          v-model="localColors[index]"
-          placeholder="Couleur HEX (#000000)"
-          class="full-color-input"
+        <!-- Aperçu des couleurs extraites / saisies -->
+        <div v-if="localColors.length" class="color-preview-container">
+          <div
+            v-for="(color, index) in localColors"
+            :key="index"
+            class="color-preview"
+            :style="{ backgroundColor: color, width: `${100 / localColors.length}%` }"
+          >
+          </div>
+        </div>
+
+        <!-- Champs pour saisir ou modifier les couleurs -->
+        <div
+          v-for="(color, index) in localColors"
+          :key="index"
+          class="p-field p-inputgroup"
+        >
+          <InputText
+            v-model="localColors[index]"
+            placeholder="Couleur HEX (#000000)"
+          />
+          <Button
+            v-if="localColors.length > 1"
+            icon="pi pi-times"
+            class="p-button-danger"
+            @click="removeColor(index)"
+          />
+        </div>
+
+        <Button
+          label="Ajouter une couleur"
+          icon="pi pi-plus"
+          class="p-button-outlined p-mb-3"
+          @click="addColor"
         />
-        <button class="delete-btn" @click="removeColor(index)" v-if="localColors.length > 1">❌</button>
       </div>
-
-      <button class="add-color-btn" @click="addColor">➕ Ajouter une couleur manuellement</button>
-
-      <div class="actions">
-        <button @click="savePalette">{{ isEditing ? "Mettre à jour" : "Enregistrer" }}</button>
-        <button @click="closeForm">Annuler</button>
+      <div class="p-dialog-footer">
+        <Button label="Enregistrer" icon="pi pi-check" @click="savePalette" />
+        <Button
+          label="Annuler"
+          icon="pi pi-times"
+          class="p-button-secondary"
+          @click="closeForm"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import { ref, computed } from "vue";
+import { ref, computed } from "vue";
+import Button from "primevue/button";
+import InputText from "primevue/inputtext";
 
-  export default {
-    props: {
-      palette: Object, // Si présent, on est en mode édition
-    },
-    emits: ["save", "close"],
-    setup(props, { emit }) {
-      const isEditing = computed(() => !!props.palette);
-      // Initialisation : en mode création, on démarre avec 4 entrées vides
-      const localColors = ref(props.palette ? [...props.palette.colors] : ["", "", "", ""]);
-      const paletteUrl = ref("");
-      const extractedColors = ref([]);
+export default {
+  name: "PaletteForm",
+  props: {
+    palette: Object,
+  },
+  emits: ["save", "close"],
+  setup(props, { emit }) {
+    const isEditing = computed(() => !!props.palette);
+    // En mode création, initialiser avec 4 champs vides
+    const localColors = ref(props.palette ? [...props.palette.colors] : ["", "", "", ""]);
+    const paletteUrl = ref("");
+    
+    // extractedColors n'est plus utilisé pour l'aperçu si on choisit Option 1
+    const extractedColors = ref([]);
 
-      // Fonction pour parser l'URL de type coolors.co
-      const parseUrl = () => {
-        const url = paletteUrl.value.trim();
-        if (!url.includes("coolors.co/")) return;
-        // On prend la dernière partie de l'URL après le dernier '/'
-        const parts = url.split("/");
-        const lastPart = parts[parts.length - 1];
-        // Les codes sont séparés par des tirets
-        const colors = lastPart.split("-");
-        // Préfixer avec '#' si nécessaire et mettre à jour extractedColors
-        extractedColors.value = colors.map(color => color.startsWith("#") ? color : "#" + color);
-        // Mettre à jour les couleurs locales avec celles extraites
-        localColors.value = [...extractedColors.value];
+    const parseUrl = () => {
+      const url = paletteUrl.value.trim();
+      if (!url.includes("coolors.co/")) return;
+      const parts = url.split("/");
+      const lastPart = parts[parts.length - 1];
+      const colors = lastPart.split("-");
+      // Préfixer avec '#' si nécessaire
+      extractedColors.value = colors.map(color => color.startsWith("#") ? color : "#" + color);
+      // Mise à jour de localColors avec les couleurs extraites
+      localColors.value = [...extractedColors.value];
+    };
+
+    const addColor = () => {
+      localColors.value.push("");
+    };
+
+    const removeColor = (index) => {
+      if (localColors.value.length > 1) {
+        localColors.value.splice(index, 1);
+      }
+    };
+
+    const savePalette = () => {
+      const newPalette = {
+        id: null,
+        colors: localColors.value.filter(c => c.trim() !== ""),
+        createdBy: null,
+        createdAt: new Date().toISOString(),
       };
+      emit("save", newPalette);
+    };
 
-      const addColor = () => {
-        localColors.value.push("");
-      };
+    const closeForm = () => {
+      emit("close");
+    };
 
-      const removeColor = (index) => {
-        if (localColors.value.length > 1) {
-          localColors.value.splice(index, 1);
-        }
-      };
-
-      const savePalette = () => {
-        const updatedPalette = {
-          id: props.palette ? props.palette.id : null,
-          colors: localColors.value.filter(c => c.trim() !== ""),
-          createdBy: props.palette ? props.palette.createdBy : null,
-          createdAt: props.palette ? props.palette.createdAt : new Date().toISOString(),
-        };
-        emit("save", updatedPalette);
-      };
-
-      const closeForm = () => {
-        emit("close");
-      };
-
-      return {
-        isEditing,
-        localColors,
-        paletteUrl,
-        extractedColors,
-        parseUrl,
-        addColor,
-        removeColor,
-        savePalette,
-        closeForm,
-      };
-    },
-  };
+    return {
+      isEditing,
+      localColors,
+      paletteUrl,
+      extractedColors,
+      parseUrl,
+      addColor,
+      removeColor,
+      savePalette,
+      closeForm,
+    };
+  },
+};
 </script>
 
 <style scoped>
-  .url-input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
+.p-dialog-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
 
-  .extracted-colors {
-    margin-bottom: 10px;
-  }
+.p-dialog {
+  background: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
 
-  .color-preview {
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    margin: 2px;
-    border: 1px solid #ddd;
-  }
+.p-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
 
-  .color-input {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
+.p-dialog-title {
+  font-size: 1.5rem;
+  font-family: 'Asset', sans-serif;
+}
 
-  .full-color-input {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
+.p-dialog-header-icon {
+  cursor: pointer;
+}
 
-  .delete-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2rem;
-  }
+.p-dialog-content {
+  padding: 1rem;
+}
 
-  .add-color-btn {
-    margin: 10px 0;
-  }
+.p-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+  gap: 10px;
+}
 
-  .actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-  }
+.url-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Conteneur de l'aperçu des couleurs */
+.color-preview-container {
+  display: flex;
+  gap: 0;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Chaque couleur occupe une largeur égale */
+.color-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  color: white;
+  font-weight: bold;
+}
+
+.p-dialog-content{
+  gap: 10px!important;
+  display: flex!important;
+  flex-direction: column!important;
+}
+.p-inputgroup {
+    width: auto!important;
+    display: flex!important;
+    justify-content: space-between!important;
+    gap: 10px!important;
+}
+.p-inputtext {
+  width: 100%!important;
+}
 </style>

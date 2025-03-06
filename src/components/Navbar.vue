@@ -1,3 +1,6 @@
+// Gère la navigation de l'application
+// //-----------------------------------------------------------------
+
 <template>
   <nav class="navbar">
     <div class="navbar-center">
