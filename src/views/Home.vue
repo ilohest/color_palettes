@@ -114,6 +114,14 @@
                   </template>
                   <!-- Affichage de l'équivalent RGB -->
                   <span class="color-code" :style="{ color: getTextColor(element) }">{{ getRGBFromHex(editableColors[index]) }}</span>
+                  <!-- Bouton d'insertion affiché entre les éléments, sauf le dernier -->
+                  <span
+                    v-if="isPaletteEditable && index < editableColors.length - 1"
+                    class="insert-plus"
+                    @click.stop="insertColor(index)"
+                  >
+                    <i class="pi pi-plus"></i>
+                  </span>
                 </div>
               </template>
             </draggable>
@@ -186,6 +194,32 @@ export default {
     const isPaletteEditable = computed(() => {
       return selectedPalette.value && user.value && user.value.uid === selectedPalette.value.createdBy;
     });
+
+    // Calcule la couleur moyenne entre deux couleurs hexadécimales
+    const averageColor = (color1, color2) => {
+      const r1 = parseInt(color1.slice(1, 3), 16);
+      const g1 = parseInt(color1.slice(3, 5), 16);
+      const b1 = parseInt(color1.slice(5, 7), 16);
+      const r2 = parseInt(color2.slice(1, 3), 16);
+      const g2 = parseInt(color2.slice(3, 5), 16);
+      const b2 = parseInt(color2.slice(5, 7), 16);
+      const r = Math.round((r1 + r2) / 2);
+      const g = Math.round((g1 + g2) / 2);
+      const b = Math.round((b1 + b2) / 2);
+      const toHex = (num) => num.toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+
+    // Méthode pour insérer une nouvelle couleur à la position index+1
+    const insertColor = (index) => {
+      if (isPaletteEditable.value) {
+        const leftColor = editableColors.value[index];
+        const rightColor = editableColors.value[index + 1];
+        const newColor = averageColor(leftColor, rightColor);
+        editableColors.value.splice(index + 1, 0, newColor);
+        updateFullPalette();
+      }
+    };
 
     const removeColorAt = (index) => {
       if (isPaletteEditable.value) {
@@ -327,6 +361,8 @@ export default {
       isPaletteEditable,
       draggableOptions,
       removeColorAt,
+      insertColor,
+      averageColor,
     };
   },
 };
@@ -511,6 +547,29 @@ export default {
   .color-code {
     text-transform: uppercase;
   }
+  .insert-plus {
+    position: absolute;
+    right: -12px; /* Ajustez cette valeur selon le rendu souhaité */
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+  }
+  .full-color-box:hover .insert-plus {
+    opacity: 1;
+  }
+
 
   @media (max-width: 850px) {
     .full-palette > .palette-card {
