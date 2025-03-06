@@ -86,6 +86,7 @@
             <draggable
               v-model="editableColors"
               :options="{ animation: 200 }" 
+              :itemKey="(item, index) => index"
               @end="updateFullPalette"
               class="palette-card"
             >
@@ -97,9 +98,20 @@
                   <!-- Si la palette est éditable, afficher un input, sinon afficher le texte -->
                   <template v-if="isPaletteEditable">
                     <!-- Input pour modifier la couleur -->
+                    <ColorPicker 
+                      v-model="editableColors[index]" 
+                      format="hex" 
+                      showButtons
+                      appendTo="body"
+                      @change="updateFullPalette"
+                      :style="{
+                        '--preview-border-color': getTextColor(element)  // Définir la variable CSS
+                      }"
+                    />
                     <input
                       type="text"
                       v-model="editableColors[index]"
+                      @input="onColorInput(index, $event.target.value)"
                       @blur="updateFullPalette"
                       class="full-color-input"
                       :style="{ color: getTextColor(element) }"
@@ -162,9 +174,10 @@ import PaletteForm from "@/components/PaletteForm.vue";
 import Button from "primevue/button";
 import InputSwitch from "primevue/inputswitch";
 import draggable from "vuedraggable";
+import ColorPicker from 'primevue/colorpicker';
 
 export default {
-  components: { PaletteForm, Button, InputSwitch, draggable  },
+  components: { PaletteForm, Button, InputSwitch, draggable, ColorPicker },
   setup() {
     const paletteStore = usePaletteStore();
     const authStore = useAuthStore();
@@ -194,6 +207,15 @@ export default {
     const isPaletteEditable = computed(() => {
       return selectedPalette.value && user.value && user.value.uid === selectedPalette.value.createdBy;
     });
+
+    const onColorInput = (index, value) => {
+      // Si la valeur n'est pas vide et ne commence pas par '#', on l'ajoute
+      if (value && value[0] !== '#') {
+        editableColors.value[index] = '#' + value;
+      } else {
+        editableColors.value[index] = value;
+      }
+    };
 
     // Calcule la couleur moyenne entre deux couleurs hexadécimales
     const averageColor = (color1, color2) => {
@@ -332,6 +354,18 @@ export default {
       }
     };
 
+    watch(
+      editableColors,
+      (newColors) => {
+        newColors.forEach((val, idx) => {
+          if (val && val[0] !== '#') {
+            editableColors.value[idx] = '#' + val;
+          }
+        });
+      },
+      { deep: true }
+    );
+
     onMounted(() => {
       paletteStore.fetchPalettes();
     });
@@ -363,6 +397,7 @@ export default {
       removeColorAt,
       insertColor,
       averageColor,
+      onColorInput,
     };
   },
 };
@@ -533,7 +568,7 @@ export default {
   }
   .remove-icon {
     position: absolute;
-    bottom: 15%;
+    bottom: 20%;
     right: 50%;
     transform: translateX(50%);
     border-radius: 50%;
@@ -569,6 +604,12 @@ export default {
   .full-color-box:hover .insert-plus {
     opacity: 1;
   }
+  .p-colorpicker-preview {
+    width: 100%;
+  }
+  .p-colorpicker-panel {
+    z-index: 1000 !important;
+  }
 
 
   @media (max-width: 850px) {
@@ -583,9 +624,17 @@ export default {
     }
     .full-color-box {
       justify-content: center;
+      padding: 0;
     }
     .toolbar {
       justify-content: space-between;
     } 
+    .p-colorpicker {
+      display: none;
+    }
+    .full-palette {
+      width: 95vw;
+      height: 95vh;
+    }
   }
 </style>

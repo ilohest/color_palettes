@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <div class="navbar-center">
-      <h1>Palette saver</h1>
+      <h1>Koolors</h1>
     </div>
 
     <div class="navbar-right">
