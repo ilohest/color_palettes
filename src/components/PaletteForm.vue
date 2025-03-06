@@ -3,12 +3,36 @@
     <div class="popup">
       <h2>{{ isEditing ? "Modifier la palette" : "Créer une palette" }}</h2>
 
+      <!-- Input URL pour importer une palette -->
+      <input
+        v-model="paletteUrl"
+        placeholder="Collez l'URL de la palette (ex: https://coolors.co/36213e-554971-63768d-8ac6d0-b8f3ff)"
+        @input="parseUrl"
+        class="url-input"
+      />
+
+      <!-- Aperçu des couleurs extraites -->
+      <div v-if="extractedColors.length" class="extracted-colors">
+        <p>Couleurs extraites :</p>
+        <div class="color-preview"
+             v-for="(color, index) in extractedColors"
+             :key="index"
+             :style="{ backgroundColor: color }">
+          {{ color }}
+        </div>
+      </div>
+
+      <!-- Champs de saisie pour les couleurs (précédemment extraites ou saisis manuellement) -->
       <div v-for="(color, index) in localColors" :key="index" class="color-input">
-        <input v-model="localColors[index]" placeholder="Couleur HEX (#000000)" />
+        <input
+          v-model="localColors[index]"
+          placeholder="Couleur HEX (#000000)"
+          class="full-color-input"
+        />
         <button class="delete-btn" @click="removeColor(index)" v-if="localColors.length > 1">❌</button>
       </div>
 
-      <button class="add-color-btn" @click="addColor">➕ Ajouter une couleur</button>
+      <button class="add-color-btn" @click="addColor">➕ Ajouter une couleur manuellement</button>
 
       <div class="actions">
         <button @click="savePalette">{{ isEditing ? "Mettre à jour" : "Enregistrer" }}</button>
@@ -19,91 +43,123 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
+  import { ref, computed } from "vue";
 
-export default {
-  props: {
-    // Si palette est fourni, on est en mode édition, sinon création.
-    palette: {
-      type: Object,
-      default: null,
+  export default {
+    props: {
+      palette: Object, // Si présent, on est en mode édition
     },
-  },
-  emits: ["save", "close"],
-  setup(props, { emit }) {
-    const isEditing = computed(() => !!props.palette);
-    // Pour la création, on initialise avec 4 inputs vides.
-    const localColors = ref(props.palette ? [...props.palette.colors] : ["", "", "", ""]);
+    emits: ["save", "close"],
+    setup(props, { emit }) {
+      const isEditing = computed(() => !!props.palette);
+      // Initialisation : en mode création, on démarre avec 4 entrées vides
+      const localColors = ref(props.palette ? [...props.palette.colors] : ["", "", "", ""]);
+      const paletteUrl = ref("");
+      const extractedColors = ref([]);
 
-    const addColor = () => {
-      localColors.value.push("");
-    };
-
-    const removeColor = (index) => {
-      if (localColors.value.length > 1) {
-        localColors.value.splice(index, 1);
-      }
-    };
-
-    const savePalette = () => {
-      // Construire l'objet palette à envoyer.
-      const updatedPalette = {
-        // Pour la modification, on conserve l'id; sinon null pour création.
-        id: props.palette ? props.palette.id : null,
-        colors: localColors.value.filter((c) => c.trim() !== ""),
-        // En création, on attribuera createdBy via le parent (en fonction de l'utilisateur connecté).
-        createdBy: props.palette ? props.palette.createdBy : null,
-        createdAt: props.palette ? props.palette.createdAt : new Date().toISOString(),
+      // Fonction pour parser l'URL de type coolors.co
+      const parseUrl = () => {
+        const url = paletteUrl.value.trim();
+        if (!url.includes("coolors.co/")) return;
+        // On prend la dernière partie de l'URL après le dernier '/'
+        const parts = url.split("/");
+        const lastPart = parts[parts.length - 1];
+        // Les codes sont séparés par des tirets
+        const colors = lastPart.split("-");
+        // Préfixer avec '#' si nécessaire et mettre à jour extractedColors
+        extractedColors.value = colors.map(color => color.startsWith("#") ? color : "#" + color);
+        // Mettre à jour les couleurs locales avec celles extraites
+        localColors.value = [...extractedColors.value];
       };
-      console.log("✅ PaletteForm.vue : Enregistrement de la palette :", updatedPalette);
-      emit("save", updatedPalette);
-    };
 
-    const closeForm = () => {
-      emit("close");
-    };
+      const addColor = () => {
+        localColors.value.push("");
+      };
 
-    return { localColors, isEditing, addColor, removeColor, savePalette, closeForm };
-  },
-};
+      const removeColor = (index) => {
+        if (localColors.value.length > 1) {
+          localColors.value.splice(index, 1);
+        }
+      };
+
+      const savePalette = () => {
+        const updatedPalette = {
+          id: props.palette ? props.palette.id : null,
+          colors: localColors.value.filter(c => c.trim() !== ""),
+          createdBy: props.palette ? props.palette.createdBy : null,
+          createdAt: props.palette ? props.palette.createdAt : new Date().toISOString(),
+        };
+        emit("save", updatedPalette);
+      };
+
+      const closeForm = () => {
+        emit("close");
+      };
+
+      return {
+        isEditing,
+        localColors,
+        paletteUrl,
+        extractedColors,
+        parseUrl,
+        addColor,
+        removeColor,
+        savePalette,
+        closeForm,
+      };
+    },
+  };
 </script>
 
 <style scoped>
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
+  .url-input {
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
-  .popup {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    min-width: 350px;
+
+  .extracted-colors {
+    margin-bottom: 10px;
   }
+
+  .color-preview {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    margin: 2px;
+    border: 1px solid #ddd;
+  }
+
   .color-input {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
   }
+
+  .full-color-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
   .delete-btn {
     background: none;
     border: none;
-    color: red;
     cursor: pointer;
+    font-size: 1.2rem;
   }
+
   .add-color-btn {
-    display: block;
     margin: 10px 0;
   }
+
   .actions {
     display: flex;
     gap: 10px;
+    margin-top: 10px;
   }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <div class="navbar-center">
-      <h1>Koolors</h1>
+      <h1>koolors</h1>
     </div>
 
     <div class="navbar-right">
@@ -16,7 +16,7 @@
         <span class="p-mr-2"><i class="pi pi-user"></i> {{ user.displayName }}</span>
         <Button 
           icon="pi pi-sign-out" 
-          class="p-button-rounded p-button-danger" 
+          class="p-button-rounded" 
           @click="logout" 
         />
       </div>
@@ -58,7 +58,6 @@ export default {
 <style scoped>
   nav {
     gap: 1rem;
-    padding: 1rem;
   }
   .user-info {
     display: flex;
@@ -71,16 +70,18 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #f8f9fa;
+    box-shadow: rgba(0, 0, 0, 0.075) 0 1px;
     padding: 0.5rem 1rem;
   }
   .navbar-center {
     flex: 1;
-    text-align: center;
+    text-align: left;
+    border-right: 1px solid rgb(172, 172, 172);
   }
   .navbar-center h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    color: rgb(255, 0, 106);
   }
   .navbar-right {
     display: flex;

@@ -121,6 +121,7 @@
                       <i class="pi pi-times"></i>
                     </span>
                   </template>
+                  <!-- Sinon, afficher le texte de la couleur -->
                   <template v-else>
                     <span class="color-code" :style="{ color: getTextColor(element) }">{{ element }}</span>
                   </template>
@@ -131,6 +132,22 @@
                     v-if="isPaletteEditable && index < editableColors.length - 1"
                     class="insert-plus"
                     @click.stop="insertColor(index)"
+                  >
+                    <i class="pi pi-plus"></i>
+                  </span>
+                  <!-- Bouton d'insertion extrême gauche (uniquement pour le premier élément) -->
+                  <span
+                    v-if="isPaletteEditable && index === 0"
+                    class="insert-plus extreme left"
+                    @click.stop="insertColorAtExtreme('left')"
+                  >
+                    <i class="pi pi-plus"></i>
+                  </span>
+                  <!-- Bouton d'insertion extrême droite (uniquement pour le dernier élément) -->
+                  <span
+                    v-if="isPaletteEditable && index === editableColors.length - 1"
+                    class="insert-plus extreme right"
+                    @click.stop="insertColorAtExtreme('right')"
                   >
                     <i class="pi pi-plus"></i>
                   </span>
@@ -230,6 +247,22 @@ export default {
       const b = Math.round((b1 + b2) / 2);
       const toHex = (num) => num.toString(16).padStart(2, '0');
       return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+
+    // Insertion à une extrémité en utilisant du blanc pour la moyenne
+    const insertColorAtExtreme = (direction) => {
+      if (isPaletteEditable.value) {
+        if (direction === 'left') {
+          const firstColor = editableColors.value[0];
+          const newColor = averageColor(firstColor, "#FFFFFF");
+          editableColors.value.unshift(newColor);
+        } else if (direction === 'right') {
+          const lastColor = editableColors.value[editableColors.value.length - 1];
+          const newColor = averageColor(lastColor, "#FFFFFF");
+          editableColors.value.push(newColor);
+        }
+        updateFullPalette();
+      }
     };
 
     // Méthode pour insérer une nouvelle couleur à la position index+1
@@ -398,6 +431,7 @@ export default {
       insertColor,
       averageColor,
       onColorInput,
+      insertColorAtExtreme,
     };
   },
 };
@@ -408,8 +442,9 @@ export default {
     display: flex;
     gap: 20px;
     margin-bottom: 10px;
-    padding: 1rem;
+    padding: 0.5rem 1rem;
     justify-content: flex-end;
+    box-shadow: rgba(0, 0, 0, 0.075) 0 1px;
   }
   .toggle-group {
     display: flex;
@@ -545,8 +580,8 @@ export default {
     top: -1%;
     right: -1%;
     border-radius: 50%;
-    background-color: #d9534f; /* Couleur de fond (rouge) */
-    color: white; /* Couleur de l'icône */
+    background-color:  #94A3B8!important;
+    color: white; 
     width: 40px;
     height: 40px;
     display: flex;
@@ -557,7 +592,7 @@ export default {
     z-index: 10;
   }
   .close-btn:hover {
-    background-color: #c9302c;
+    background-color: rgb(117, 117, 117)!important;
   }
   .full-color-input {
     background: transparent;
@@ -584,10 +619,10 @@ export default {
   }
   .insert-plus {
     position: absolute;
-    right: -12px; /* Ajustez cette valeur selon le rendu souhaité */
+    right: -16px;
     top: 50%;
     transform: translateY(-50%);
-    background: #fff;
+    background: rgba(255, 255, 255, 0.6);
     color: #000;
     border-radius: 50%;
     width: 30px;
@@ -609,6 +644,39 @@ export default {
   }
   .p-colorpicker-panel {
     z-index: 1000 !important;
+  }
+  .insert-plus {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+    color: #000;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+  }
+  .full-color-box .insert-plus.extreme {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .full-color-box:hover .insert-plus.extreme {
+    opacity: 1;
+  }
+  .insert-plus.extreme.left {
+    left: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .insert-plus.extreme.right {
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
 
