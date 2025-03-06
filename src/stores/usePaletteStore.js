@@ -14,10 +14,10 @@ export const usePaletteStore = defineStore("paletteStore", {
     },
 
     async fetchPalettes() {
-        console.log("🔄 usePaletteStore.js : Chargement des palettes...");
+        //console.log("🔄 usePaletteStore.js : Chargement des palettes...");
         try {
           FirebaseService.fetchPalettes((fetchedPalettes) => {
-            console.log("📥 usePaletteStore.js : Palettes récupérées :", fetchedPalettes);
+            //console.log("📥 usePaletteStore.js : Palettes récupérées :", fetchedPalettes);
             this.palettes = fetchedPalettes; // ✅ Stocke les palettes
           });
         } catch (error) {

@@ -79,20 +79,58 @@
     <!-- Overlay pour afficher la palette en plein écran -->
     <div v-if="selectedPalette" class="overlay" @click="closeOverlay">
       <div class="full-palette" @click.stop>
+        <!-- Bouton de fermeture stylisé comme une croix dans un cercle -->
         <Button icon="pi pi-times" class="close-btn" @click="closeOverlay" />
-        <div class="palette-card">
-          <div
-            class="full-color-box"
-            v-for="(color, index) in selectedPalette.colors"
-            :key="index"
-            :style="{ backgroundColor: color }"
-          >
-            <span :style="{ color: getTextColor(color) }">{{ color }}</span>
-            <span :style="{ color: getTextColor(color) }">{{ getRGBFromHex(color) }}</span>
-          </div>
-        </div>
-      </div>
+          <!-- Si la palette est éditable, afficher la zone draggable -->
+          <template v-if="isPaletteEditable">
+            <draggable
+              v-model="editableColors"
+              :options="{ animation: 200 }" 
+              @end="updateFullPalette"
+              class="palette-card"
+            >
+              <template #item="{ element, index }">
+                <div
+                  class="full-color-box"
+                  :style="{ backgroundColor: element  }"
+                >
+                  <!-- Si la palette est éditable, afficher un input, sinon afficher le texte -->
+                  <template v-if="isPaletteEditable">
+                    <!-- Input pour modifier la couleur -->
+                    <input
+                      type="text"
+                      v-model="editableColors[index]"
+                      @blur="updateFullPalette"
+                      class="full-color-input"
+                      :style="{ color: getTextColor(element) }"
+                    />
+                  </template>
+                  <template v-else>
+                    <span class="color-code" :style="{ color: getTextColor(element) }">{{ element }}</span>
+                  </template>
+                  <!-- Affichage de l'équivalent RGB -->
+                  <span class="color-code" :style="{ color: getTextColor(element) }">{{ getRGBFromHex(editableColors[index]) }}</span>
+                </div>
+              </template>
+            </draggable>
+          </template>
+          <!-- Sinon, afficher simplement les couleurs en lecture seule -->
+          <template v-else class="palette-card">
+            <div class="palette-card">  
+              <div
+                v-for="(color, index) in selectedPalette.colors"
+                :key="index"
+                class="full-color-box"
+                :style="{ backgroundColor: color }"
+              >
+                <span class="color-code" :style="{ color: getTextColor(color) }">{{ color }}</span>
+                <span class="color-code" :style="{ color: getTextColor(color) }">{{ getRGBFromHex(color) }}</span>
+              </div>
+            </div>
+          </template>
+        
     </div>
+  </div>
 
     <!-- PaletteForm pour création / modification -->
     <PaletteForm
@@ -105,15 +143,16 @@
 </template>
 
 <script>
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import { usePaletteStore } from "@/stores/usePaletteStore.js";
 import { useAuthStore } from "@/stores/useAuthStore.js";
 import PaletteForm from "@/components/PaletteForm.vue";
 import Button from "primevue/button";
 import InputSwitch from "primevue/inputswitch";
+import draggable from "vuedraggable";
 
 export default {
-  components: { PaletteForm, Button, InputSwitch },
+  components: { PaletteForm, Button, InputSwitch, draggable  },
   setup() {
     const paletteStore = usePaletteStore();
     const authStore = useAuthStore();
@@ -123,6 +162,7 @@ export default {
     const showPaletteForm = ref(false);
     const editingPalette = ref(null);
     const selectedPalette = ref(null);
+    const editableColors = ref([]);
 
     const user = computed(() => authStore.user);
     const palettes = computed(() => paletteStore.palettes || []);
@@ -138,6 +178,16 @@ export default {
       }
       return filtered;
     });
+
+    const isPaletteEditable = computed(() => {
+      return selectedPalette.value && user.value && user.value.uid === selectedPalette.value.createdBy;
+    });
+
+    // Définir les options du draggable de manière réactive
+    const draggableOptions = computed(() => ({
+      animation: 200,
+      disabled: !isPaletteEditable.value
+    }));
 
     const toggleUserPalettes = () => {
       showUserPalettes.value = !showUserPalettes.value;
@@ -193,10 +243,19 @@ export default {
       return `rgb(${r}, ${g}, ${b})`;
     };
 
+    // Lorsque selectedPalette change, on initialise editableColors avec les couleurs de la palette
+    watch(selectedPalette, (newPalette) => {
+      if (newPalette) {
+        editableColors.value = [...newPalette.colors];
+      }
+    });
+
+    // Fonction pour ouvrir l'overlay en cliquant sur une palette (en dehors des boutons d'action)
     const viewPalette = (palette) => {
       selectedPalette.value = palette;
     };
 
+    // Fonction pour fermer l'overlay
     const closeOverlay = () => {
       selectedPalette.value = null;
     };
@@ -205,6 +264,26 @@ export default {
     const handlePaletteClick = (palette, event) => {
       if (!event.target.closest(".palette-actions")) {
         viewPalette(palette);
+      }
+    };
+
+    // Lorsque selectedPalette change, initialiser editableColors pour le drag & drop
+    watch(selectedPalette, (newPalette) => {
+      if (newPalette) {
+        editableColors.value = [...newPalette.colors];
+      }
+    });
+
+    // Mettre à jour la palette dans Firebase quand le drag & drop est terminé
+    const updateFullPalette = async () => {
+      if (selectedPalette.value) {
+        const updatedPalette = { ...selectedPalette.value, colors: [...editableColors.value] };
+        try {
+          await paletteStore.updatePalette(updatedPalette);
+          selectedPalette.value = updatedPalette;
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour de l'ordre des couleurs :", error);
+        }
       }
     };
 
@@ -232,6 +311,10 @@ export default {
       viewPalette,
       closeOverlay,
       handlePaletteClick,
+      editableColors,
+      updateFullPalette,
+      isPaletteEditable,
+      draggableOptions,
     };
   },
 };
@@ -392,4 +475,12 @@ export default {
   .close-btn:hover {
     background-color: #c9302c;
   }
+  .full-color-input {
+    background: transparent;
+    border: none;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 15px;
+  }
+
 </style>
