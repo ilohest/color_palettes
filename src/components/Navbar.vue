@@ -94,4 +94,11 @@ export default {
   .navbar-right span {
     font-size: 1rem;
   }
+  @media (max-width: 850px) {
+    .user-info > span {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
 </style>

@@ -2,10 +2,10 @@
   <div>
     <!-- Barre d'outils -->
     <div class="toolbar">
-      <!-- Bouton Ajouter Palette avec icône + -->
+      <!-- Ajouter Palette -->
       <Button
         v-if="user"
-        label="Ajouter une Palette"
+        label="New palette"
         icon="pi pi-plus"
         class="p-button-outlined add-btn"
         @click="openCreateForm"
@@ -104,6 +104,10 @@
                       class="full-color-input"
                       :style="{ color: getTextColor(element) }"
                     />
+                    <!-- Icône de suppression visible au survol -->
+                    <span class="remove-icon" @click.stop="removeColorAt(index)" :style="{ color: getTextColor(element) }">
+                      <i class="pi pi-times"></i>
+                    </span>
                   </template>
                   <template v-else>
                     <span class="color-code" :style="{ color: getTextColor(element) }">{{ element }}</span>
@@ -182,6 +186,13 @@ export default {
     const isPaletteEditable = computed(() => {
       return selectedPalette.value && user.value && user.value.uid === selectedPalette.value.createdBy;
     });
+
+    const removeColorAt = (index) => {
+      if (isPaletteEditable.value) {
+        editableColors.value.splice(index, 1);
+        updateFullPalette(); // Met à jour la palette dans Firebase
+      }
+    };
 
     // Définir les options du draggable de manière réactive
     const draggableOptions = computed(() => ({
@@ -315,6 +326,7 @@ export default {
       updateFullPalette,
       isPaletteEditable,
       draggableOptions,
+      removeColorAt,
     };
   },
 };
@@ -406,6 +418,7 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: end;
+    position: relative;
   }
   .close-btn {
     background: #d9534f;
@@ -482,5 +495,38 @@ export default {
     text-transform: uppercase;
     padding: 15px;
   }
+  .remove-icon {
+    position: absolute;
+    bottom: 15%;
+    right: 50%;
+    transform: translateX(50%);
+    border-radius: 50%;
+    padding: 2px 8px;
+    cursor: pointer;
+    display: none; 
+  }
+  .full-color-box:hover .remove-icon {
+    display: block; /* Affiché lors du survol */
+  }
+  .color-code {
+    text-transform: uppercase;
+  }
 
+  @media (max-width: 850px) {
+    .full-palette > .palette-card {
+      flex-direction: column;
+    }
+    .palette-card {
+      min-width: unset;
+    }
+    .full-color-input {
+      padding: 0;
+    }
+    .full-color-box {
+      justify-content: center;
+    }
+    .toolbar {
+      justify-content: space-between;
+    } 
+  }
 </style>
