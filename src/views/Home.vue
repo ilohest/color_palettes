@@ -13,33 +13,34 @@
       <!-- Ajouter palette -->
       <Button
         v-if="user"
-        label="New palette"
         icon="pi pi-plus"
         class="p-button-outlined add-btn"
         @click="openCreateForm"
       />
 
-      <!-- Toggle switch pour filtrer les palettes -->
-      <div v-if="user" class="toggle-group">
-        <span class="toggle-label left">
-          <i class="pi pi-users"></i>
-        </span>
-        <InputSwitch v-model="showUserPalettes" />
-        <span class="toggle-label right">
-          <i class="pi pi-user"></i>
-        </span>
-      </div>
-
-      <!-- Toggle switch pour trier les palettes -->
-      <div class="toggle-group" v-if="palettes.length > 1">
-        <span class="toggle-label left">
-          <i class="pi pi-calendar"></i>
-          <i class="pi pi-sort-amount-up"></i>
-        </span>
-        <InputSwitch v-model="randomOrder" />
-        <span class="toggle-label right">
-          <i class="fas fa-shuffle"></i>
-        </span>
+      <div class="filters">
+        <!-- Toggle switch pour filtrer les palettes -->
+        <div v-if="user" class="toggle-group">
+          <span class="toggle-label left">
+            <i class="pi pi-users"></i>
+          </span>
+          <InputSwitch v-model="showUserPalettes" />
+          <span class="toggle-label right">
+            <i class="pi pi-user"></i>
+          </span>
+        </div>
+  
+        <!-- Toggle switch pour trier les palettes -->
+        <div class="toggle-group" v-if="palettes.length > 1">
+          <span class="toggle-label left">
+            <i class="pi pi-calendar"></i>
+            <i class="pi pi-sort-amount-up"></i>
+          </span>
+          <InputSwitch v-model="randomOrder" />
+          <span class="toggle-label right">
+            <i class="fas fa-shuffle"></i>
+          </span>
+        </div>
       </div>
     </div>
 
@@ -177,7 +178,6 @@ import Button from "primevue/button";
 import InputSwitch from "primevue/inputswitch";
 import draggable from "vuedraggable";
 import ColorPicker from 'primevue/colorpicker';
-
 import PaletteCard from "@/components/PaletteCard.vue";
 
 export default {
@@ -196,6 +196,7 @@ export default {
     const user = computed(() => authStore.user);
     const palettes = computed(() => paletteStore.palettes || []);
 
+    // Filtrer les palettes à afficher en fonction des options de l'utilisateur
     const displayedPalettes = computed(() => {
       let filtered = showUserPalettes.value && user.value
         ? palettes.value.filter(p => p.createdBy === user.value.uid)
@@ -208,10 +209,12 @@ export default {
       return filtered;
     });
 
+    // Vérifie si la palette actuellement sélectionnée est éditable par l'utilisateur connecté
     const isPaletteEditable = computed(() => {
       return selectedPalette.value && user.value && user.value.uid === selectedPalette.value.createdBy;
     });
 
+    // Gestion des couleurs dans l'input
     const onColorInput = (index, value) => {
       // Si la valeur n'est pas vide et ne commence pas par '#', on l'ajoute
       if (value && value[0] !== '#') {
@@ -263,6 +266,7 @@ export default {
       }
     };
 
+    // Méthode pour supprimer une couleur à l'index donné
     const removeColorAt = (index) => {
       if (isPaletteEditable.value) {
         editableColors.value.splice(index, 1);
@@ -276,24 +280,29 @@ export default {
       disabled: !isPaletteEditable.value
     }));
 
+    // Bascule l'affichage des palettes de l'utilisateur
     const toggleUserPalettes = () => {
       showUserPalettes.value = !showUserPalettes.value;
     };
 
+    // Bascule l'ordre aléatoire
     const toggleRandomOrder = () => {
       randomOrder.value = !randomOrder.value;
     };
 
+    // Ouvre le formulaire de création
     const openCreateForm = () => {
       editingPalette.value = null;
       showPaletteForm.value = true;
     };
 
+    // Ouvre le formulaire de modification avec les données de la palette
     const editPalette = (palette) => {
       editingPalette.value = { ...palette, colors: [...palette.colors] };
       showPaletteForm.value = true;
     };
 
+    // Enregistre ou met à jour une palette dans Firebase
     const handleSavePalette = async (palette) => {
       try {
         if (!palette.id) {
@@ -374,6 +383,7 @@ export default {
       }
     };
 
+    // Vérifier si les couleurs sont valides et ajouter le préfixe '#' si nécessaire
     watch(
       editableColors,
       (newColors) => {
@@ -386,6 +396,7 @@ export default {
       { deep: true }
     );
 
+    // Récupérer les palettes lors du montage du composant
     onMounted(() => {
       paletteStore.fetchPalettes();
     });
@@ -432,6 +443,10 @@ export default {
     padding: 0.5rem 1rem;
     justify-content: flex-end;
     box-shadow: rgba(0, 0, 0, 0.075) 0 1px;
+  }
+  .filters {
+    display: flex;
+    gap: 20px;
   }
   .toggle-group {
     display: flex;
@@ -665,7 +680,6 @@ export default {
     top: 50%;
     transform: translateY(-50%);
   }
-
 
   @media (max-width: 850px) {
     .full-palette > .palette-card {

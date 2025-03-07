@@ -85,4 +85,10 @@
     flex: 1;
     height: 100px;
   }
+  .p-button-text, 
+  .p-button-danger {
+    background: rgb(115 115 115 / 29%)!important;
+    border-color: transparent!important;
+    color: #ffffff!important;
+  }
 </style>

@@ -6,7 +6,6 @@
   <div class="p-dialog-mask" @click.self="closeForm">
     <div class="p-dialog">
       <div class="p-dialog-header">
-        <span class="p-dialog-title">Créer une palette</span>
         <Button icon="pi pi-times" class="p-dialog-header-icon" @click="closeForm" />
       </div>
       <div class="p-dialog-content">
@@ -218,17 +217,20 @@ export default {
   color: white;
   font-weight: bold;
 }
-
+.p-dialog-header {
+  display: flex;
+  justify-content: flex-end;
+}
 .p-dialog-content{
   gap: 10px!important;
   display: flex!important;
   flex-direction: column!important;
 }
 .p-inputgroup {
-    width: auto!important;
-    display: flex!important;
-    justify-content: space-between!important;
-    gap: 10px!important;
+  width: auto!important;
+  display: flex!important;
+  justify-content: space-between!important;
+  gap: 10px!important;
 }
 .p-inputtext {
   width: 100%!important;
