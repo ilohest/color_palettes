@@ -8,5 +8,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src') // Alias pour `@/` -> `src/`
     }
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+  },
 });

@@ -10,7 +10,7 @@
   <div>
     <!-- Barre d'outils -->
     <div class="toolbar">
-      <!-- Ajouter Palette -->
+      <!-- Ajouter palette -->
       <Button
         v-if="user"
         label="New palette"
@@ -50,32 +50,15 @@
     <!-- Grille des palettes -->
     <div class="palette-grid">
       <!-- Chaque palette s'affiche comme une carte -->
-      <div
+      <PaletteCard
         v-for="palette in displayedPalettes"
         :key="palette.id"
-        class="palette-card"
-        @click="handlePaletteClick(palette, $event)"
-      >
-        <!-- Bouton supprimer -->
-        <div class="palette-actions" @click.stop>
-          <Button
-            v-if="user && user.uid === palette.createdBy"
-            icon="pi pi-trash"
-            class="p-button-text p-button-danger"
-            @click="deletePalette(palette)"
-          />
-        </div>
-
-        <!-- Affichage des couleurs dans la palette -->
-        <div
-          class="color-box"
-          v-for="(color, index) in palette.colors"
-          :key="index"
-          :style="{ backgroundColor: color, width: `${100 / palette.colors.length}%` }"
-        >
-          <!-- <span :style="{ color: getTextColor(color) }">{{ color }}</span> -->
-        </div>
-      </div>
+        :palette="palette"
+        :user="user"
+        @edit="editPalette"
+        @remove="deletePalette"
+        @view="viewPalette"
+      />
     </div>
 
     <!-- Overlay pour afficher la palette en plein écran -->
@@ -195,8 +178,10 @@ import InputSwitch from "primevue/inputswitch";
 import draggable from "vuedraggable";
 import ColorPicker from 'primevue/colorpicker';
 
+import PaletteCard from "@/components/PaletteCard.vue";
+
 export default {
-  components: { PaletteForm, Button, InputSwitch, draggable, ColorPicker },
+  components: { PaletteForm, Button, InputSwitch, draggable, ColorPicker, PaletteCard },
   setup() {
     const paletteStore = usePaletteStore();
     const authStore = useAuthStore();

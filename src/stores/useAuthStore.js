@@ -3,7 +3,6 @@
 //-----------------------------------------------------------------------------------------------
 
 import { defineStore } from "pinia";
-import { ref } from "vue";
 import { auth } from "@/services/FirebaseConfig.js"; // Import Firebase Auth
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 
