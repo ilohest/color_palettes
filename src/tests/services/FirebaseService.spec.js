@@ -46,79 +46,123 @@ describe('FirebaseService', () => {
 
   // Tests
   // addPalette : vérifier que la palette est ajoutée si l’utilisateur est connecté
-  it('doit ajouter une palette si l’utilisateur est connecté', async () => {
-    const mockRefPalettes = {}             // Ce sera le résultat de ref(db, "palettes")
-    const mockRefNewPalette = { key: 'palette123' } // Ce que push renvoie
+  it('ajoute une palette valide via FirebaseService.addPalette', async () => {
+    const colors = ['#FFFFFF'];
   
-    ref.mockReturnValue(mockRefPalettes)
-    push.mockReturnValue(mockRefNewPalette)
-  
-    await FirebaseService.addPalette(['#123456'])
-  
-    expect(ref).toHaveBeenCalledWith(expect.any(Object), 'palettes')
-    expect(push).toHaveBeenCalledWith(mockRefPalettes)
-    expect(set).toHaveBeenCalledWith(mockRefNewPalette, {
-      colors: ['#123456'],
-      createdBy: 'user123',
-      createdAt: expect.any(String),
-    })
+    // On suppose que auth.currentUser.uid est "user123"
+    const expectedPalette = new Palette(null, colors, 'user123');
+    
+    // On suppose que la palette est valide
+    // Simuler le push pour retourner une référence fictive
+    const mockRef = { key: 'palette123' };
+    push.mockReturnValue(mockRef);
+    
+    await FirebaseService.addPalette(colors);
+    
+    // Vérifie que set a été appelé avec la référence retournée par push
+    // et l'objet retourné par expectedPalette.toFirebaseObject()
+    expect(set).toHaveBeenCalledWith(mockRef, expectedPalette.toFirebaseObject());
   })
   
 
   // deletePalette : vérifier que la palette est supprimée correctement
-  it('doit supprimer une palette correctement', async () => {
-    await FirebaseService.deletePalette({ id: 'palette1', createdBy: 'user123' })
-    expect(remove).toHaveBeenCalled()
-  })
-
-  // Cas erreur deletePalette : utilisateur non propriétaire
-  it('ne doit pas supprimer si l’utilisateur n’est pas propriétaire', async () => {
-    auth.currentUser.uid = 'differentUser'
-    
-    const palette = { id: 'palette1', createdBy: 'user123' }
+  it('supprime une palette via FirebaseService.deletePalette si l’utilisateur est le créateur', async () => {
+    // Simuler que l'utilisateur connecté est obtenu via getCurrentUser
+    // On peut, dans le test, considérer que auth.currentUser.uid === 'user123'
+    // Simuler une palette avec createdBy 'user123'
+    const palette = { 
+      id: 'palette1', 
+      colors: ['#FFFFFF'], 
+      createdBy: 'user123', 
+      createdAt: '2025-03-07T12:00:00Z'
+    };
   
-    await expect(FirebaseService.deletePalette(palette)).rejects.toThrow()
-  })
+    // Mocker ref() pour retourner un objet fictif
+    const mockRef = {};
+    ref.mockReturnValue(mockRef);
+  
+    await FirebaseService.deletePalette(palette);
+  
+    // Vérifier que ref est appelé avec le chemin "palettes/palette1" et remove est appelé avec ce mock
+    expect(ref).toHaveBeenCalledWith(expect.anything(), `palettes/${palette.id}`);
+    expect(remove).toHaveBeenCalledWith(mockRef);
+  });
+  
+
+  // Cas erreur deletePalette : cas où l'utilisateur n'est pas le propriétaire
+  it('lance une erreur lors de la suppression si l’utilisateur n’est pas le créateur', async () => {
+    const palette = { 
+      id: 'palette1', 
+      colors: ['#FFFFFF'], 
+      createdBy: 'otherUser', 
+      createdAt: '2025-03-07T12:00:00Z'
+    };
+  
+    // Supposons que getCurrentUser retourne un utilisateur dont uid est 'testUser'
+    await expect(FirebaseService.deletePalette(palette)).rejects.toThrow("Vous ne pouvez supprimer que vos propres palettes !");
+  });  
 
   // fetchPalettes : vérifier que les palettes sont récupérées depuis Firebase
-  it('doit récupérer des palettes depuis Firebase', () => {
-    const mockFirebasePalettes = {
+  it('récupère et convertit correctement les palettes via FirebaseService.fetchPalettes', () => {
+    // Simuler des données provenant de Firebase
+    const fakeData = {
       palette1: {
         colors: ['#FFFFFF'],
-        createdBy: 'user123',
-        createdAt: new Date().toISOString(),
+        createdBy: 'testUser',
+        createdAt: '2025-03-07T12:00:00Z'
       },
-    }
+      palette2: {
+        colors: ['#000000'],
+        createdBy: 'otherUser',
+        createdAt: '2025-03-07T11:00:00Z'
+      }
+    };
   
+    // Configurer le mock pour onValue afin de simuler le snapshot Firebase
     onValue.mockImplementation((ref, callback) => {
-      callback({ val: () => mockFirebasePalettes })
-    })
-  
-    const callback = vi.fn()
-  
-    FirebaseService.fetchPalettes(callback)
-  
-    expect(callback).toHaveBeenCalledWith([
-      expect.objectContaining({
-        id: 'palette1',
-        colors: ['#FFFFFF'],
-        createdBy: 'user123',
-        createdAt: expect.any(String),
-      }),
-    ])
-  })  
+      callback({ val: () => fakeData });
+    });
+    
+    // Créer une fonction callback spy
+    const callback = vi.fn();
+    
+    // Appeler la méthode fetchPalettes sans filtrage
+    FirebaseService.fetchPalettes(callback);
+    
+    // Construire le tableau attendu en utilisant Palette.fromFirebase
+    const expectedPalettes = Object.keys(fakeData).map(id => Palette.fromFirebase(id, fakeData[id]));
+    
+    // Vérifier que le callback a été appelé avec le tableau attendu
+    expect(callback).toHaveBeenCalledWith(expectedPalettes);
+  }); 
  
   // updatePalette : vérifier que la palette est mise à jour
-  it('doit mettre à jour une palette', async () => {
-    const mockRef = {}
-    ref.mockReturnValue(mockRef)
+  it('met à jour une palette via FirebaseService.updatePalette', async () => {
+    // Simuler un paletteData à mettre à jour
+    const paletteData = { 
+      id: 'palette1', 
+      colors: ['#FFFFFF', '#000000'], 
+      createdBy: 'testUser', 
+      createdAt: '2025-03-07T12:00:00Z'
+    };
+  
+    // Créer une instance de Palette avec les mêmes données
+    const paletteInstance = new Palette(
+      paletteData.id,
+      paletteData.colors,
+      paletteData.createdBy,
+      paletteData.createdAt
+    );
     
-    const palette = { id: 'palette1', colors: ['#000'] }
-    await FirebaseService.updatePalette(palette)
+    // On s'attend à ce que set soit appelé avec ref(db, `palettes/${paletteData.id}`) et l'objet issu de toFirebaseObject()
+    const mockRef = {}; 
+    ref.mockReturnValue(mockRef);
+  
+    await FirebaseService.updatePalette(paletteData);
     
-    expect(ref).toHaveBeenCalledWith(expect.anything(), 'palettes/palette1')
-    expect(set).toHaveBeenCalledWith(mockRef, palette)
-  })
+    expect(ref).toHaveBeenCalledWith(expect.anything(), `palettes/${paletteData.id}`);
+    expect(set).toHaveBeenCalledWith(mockRef, paletteInstance.toFirebaseObject());
+  }); 
 
   // signInWithGoogle : vérifier que l’utilisateur est connecté via Google
   it('doit connecter l’utilisateur via Google', async () => {

@@ -40,38 +40,36 @@ export default class FirebaseService {
       throw new Error("Utilisateur non connecté !");
     }
   
+    // Création d'une instance de la classe Palette (id est null pour une nouvelle palette)
+    const newPalette = new Palette(null, colors, user.uid);
+    // Vérifier que la palette est valide avant de l'enregistrer (méthode de Palette)
+    if (!newPalette.isValid()) {
+      throw new Error("Palette invalide !");
+    }
+    
     const newPaletteRef = push(ref(db, "palettes"));
-    const newPalette = {
-      colors: colors,
-      createdBy: user.uid,
-      createdAt: new Date().toISOString(),
-    };
-  
     //console.log("🔥 FirebaseService.js : Enregistrement de la palette sur Firebase :", newPalette);
-    return set(newPaletteRef, newPalette);
+    // Utiliser toFirebaseObject pour transformer l'objet en format adapté à Firebase
+    return set(newPaletteRef, newPalette.toFirebaseObject());
   }
   
-
-   // 🔥 Supprimer une palette si l'utilisateur est le propriétaire
-   static async deletePalette(palette) {
-      const user = this.getCurrentUser();
-
-      //console.log("🔍 FirebaseService.js : Suppression demandée par :", user ? user.uid : "Aucun utilisateur détecté");
-      //console.log("📌 FirebaseService.js : Propriétaire de la palette :", palette.createdBy);
-      
-      if (!user) {
-        throw new Error("Utilisateur non connecté !");
-      }
-      if (user.uid !== palette.createdBy) {
-        throw new Error("Vous ne pouvez supprimer que vos propres palettes !");
-      }
-
-      const paletteRef = ref(db, `palettes/${palette.id}`);
-      return remove(paletteRef);
+  // 🔥 Supprimer une palette si l'utilisateur est le propriétaire
+  static async deletePalette(palette) {
+    const user = this.getCurrentUser();
+    if (!user) {
+      throw new Error("Utilisateur non connecté !");
+    }
+    if (user.uid !== palette.createdBy) {
+      throw new Error("Vous ne pouvez supprimer que vos propres palettes !");
+    }
+    //console.log("🔍 FirebaseService.js : Suppression demandée par :", user ? user.uid : "Aucun utilisateur détecté");
+    //console.log("📌 FirebaseService.js : Propriétaire de la palette :", palette.createdBy);
+    
+    const paletteRef = ref(db, `palettes/${palette.id}`);
+    return remove(paletteRef);
   }
 
-
-  // 🔥 Récupérer les palettes et les convertir en objets `Palette`
+  // 🔥 Récupérer les palettes et les convertir en instances de Palette
   static fetchPalettes(callback, userId = null) {
     const palettesRef = ref(db, "palettes");
 
@@ -80,20 +78,30 @@ export default class FirebaseService {
       let palettes = [];
 
       if (data) {
-        palettes = Object.keys(data).map(id => Palette.fromFirebase(id, data[id]));
-
+        // Palette.fromFirebase convertit les objets + propriétés (colors, createdBy, etc.) récupérés de Firebase en instances de Palette
+        palettes = Object.keys(data).map(id => Palette.fromFirebase(id, data[id])); 
         if (userId) {
           palettes = palettes.filter(palette => palette.createdBy === userId);
         }
       }
-
       callback(palettes);
     });
   }
 
-  // 🔥 Mettre à jour une palette
-  static async updatePalette(palette) {
-    const paletteRef = ref(db, `palettes/${palette.id}`);
-    return set(paletteRef, palette);
-  }  
+  // 🔥 Mettre à jour une palette en utilisant la classe Palette pour la validation et la conversion
+  static async updatePalette(paletteData) {
+    const paletteRef = ref(db, `palettes/${paletteData.id}`);
+    // Créer une instance de Palette avec les données existantes
+    const paletteInstance = new Palette(
+      paletteData.id,
+      paletteData.colors,
+      paletteData.createdBy,
+      paletteData.createdAt
+    );
+    if (!paletteInstance.isValid()) {
+      throw new Error("Palette invalide !");
+    }
+    // Utiliser toFirebaseObject pour transformer l'objet en format adapté à Firebase
+    return set(paletteRef, paletteInstance.toFirebaseObject());
+  }
 }
