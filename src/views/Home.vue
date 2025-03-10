@@ -50,7 +50,7 @@
     </div>
 
     <!-- Message s'il n'y a aucune palette (après chargement) -->
-    <div v-else-if="!displayedPalettes || displayedPalettes.length === 0">
+    <div v-else-if="!displayedPalettes || displayedPalettes.length === 0" class="center">
       Aucune palette enregistrée.
     </div>
     
@@ -323,12 +323,12 @@ export default {
         }
         showPaletteForm.value = false;
       } catch (error) {
-        console.error("Erreur lors de l'enregistrement :", error);
+        console.error("Error when saving :", error);
       }
     };
 
     const deletePalette = async (palette) => {
-      if (confirm("Voulez-vous vraiment supprimer cette palette ?")) {
+      if (confirm("Do you really want to delete this palette ?")) {
         await paletteStore.deletePalette(palette.id);
       }
     };
@@ -472,7 +472,7 @@ export default {
     margin-bottom: 10px;
     padding: 0.5rem 1rem;
     justify-content: flex-end;
-    box-shadow: rgba(0, 0, 0, 0.075) 0 1px;
+    border-bottom: 1px solid #ddd;
   }
   .filters {
     display: flex;
@@ -715,6 +715,9 @@ export default {
     justify-content: center;
     align-items: center;
     height: 200px;
+  }
+  .center {
+    text-align: center;
   }
 
   @media (max-width: 850px) {

@@ -17,6 +17,8 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputSwitch from 'primevue/inputswitch';
 import ColorPicker from 'primevue/colorpicker';
+import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
 
 // Création de l'application
 const app = createApp(App);
@@ -34,12 +36,13 @@ app.use(PrimeVue, {
 });
 app.use(pinia); // ✅ Activation de Pinia
 app.use(router); // 🚀 Ajout du routeur
-
+app.use(ToastService);
 // Enregistrer globalement les composants
 app.component('Button', Button);
 app.component('InputText', InputText);
 app.component('InputSwitch', InputSwitch);
 app.component('ColorPicker', ColorPicker);
+app.component('Toast', Toast);
 
 // Vérifier si un utilisateur est déjà connecté
 const authStore = useAuthStore();

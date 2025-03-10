@@ -13,7 +13,7 @@
         <div class="p-field">
           <InputText
             v-model="paletteUrl"
-            placeholder="Collez l'URL de la palette Coolors.co"
+            placeholder="Paste the URL from the Coolors.co palette"
             @input="parseUrl"
             class="url-input"
           />
@@ -38,7 +38,7 @@
         >
           <InputText
             v-model="localColors[index]"
-            placeholder="Couleur HEX (#000000)"
+            placeholder="HEX color (#000000)"
           />
           <Button
             v-if="localColors.length > 1"
@@ -49,16 +49,16 @@
         </div>
 
         <Button
-          label="Ajouter une couleur"
+          label="Add a color"
           icon="pi pi-plus"
           class="p-button-outlined p-mb-3"
           @click="addColor"
         />
       </div>
       <div class="p-dialog-footer">
-        <Button label="Enregistrer" icon="pi pi-check" @click="savePalette" />
+        <Button label="Save" icon="pi pi-check" @click="savePalette" />
         <Button
-          label="Annuler"
+          label="Cancel"
           icon="pi pi-times"
           class="p-button-secondary"
           @click="closeForm"

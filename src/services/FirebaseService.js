@@ -7,6 +7,7 @@ import { db, auth } from "./FirebaseConfig.js";
 import { ref, set, push, onValue, remove } from "firebase/database";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import Palette from "../models/Palette.js";
+import User from "../models/User.js";
 
 const provider = new GoogleAuthProvider();
 
@@ -104,5 +105,29 @@ export default class FirebaseService {
     }
     // Utiliser toFirebaseObject pour transformer l'objet en format adapté à Firebase
     return set(paletteRef, paletteInstance.toFirebaseObject());
+  }
+
+  // 🔥 Méthode pour sauvegarder les données utilisateur
+  static async saveUser(userData) {
+    // userData est une instance de User
+    if (!userData.isValid()) {
+      throw new Error("Données utilisateur invalides");
+    }
+    const userRef = ref(db, `users/${userData.id}`);
+    return set(userRef, userData.toFirebaseObject());
+  }
+
+  // 🔥 Méthode pour récupérer les données utilisateur à partir de Firebase
+  static fetchUser(userId, callback) {
+    const userRef = ref(db, `users/${userId}`);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const userInstance = User.fromFirebase(userId, data);
+        callback(userInstance);
+      } else {
+        callback(null);
+      }
+    });
   }
 }
