@@ -84,6 +84,7 @@ export default class FirebaseService {
           palettes = palettes.filter(palette => palette.createdBy === userId);
         }
       }
+      // Appeler le callback une fois que les palettes sont récupérées
       callback(palettes);
     });
   }

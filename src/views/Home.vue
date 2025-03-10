@@ -44,12 +44,18 @@
       </div>
     </div>
 
-    <div v-if="!displayedPalettes || displayedPalettes.length === 0">
-      Aucune palette enregistrée.
+    <!-- Spinner de chargement -->
+    <div v-if="isLoading" class="loading-spinner">
+      <ProgressSpinner />
     </div>
 
+    <!-- Message s'il n'y a aucune palette (après chargement) -->
+    <div v-else-if="!displayedPalettes || displayedPalettes.length === 0">
+      Aucune palette enregistrée.
+    </div>
+    
     <!-- Grille des palettes -->
-    <div class="palette-grid">
+    <div v-else class="palette-grid">
       <!-- Chaque palette s'affiche comme une carte -->
       <PaletteCard
         v-for="palette in displayedPalettes"
@@ -177,12 +183,13 @@ import { useAuthStore } from "@/stores/useAuthStore.js";
 import PaletteForm from "@/components/PaletteForm.vue";
 import Button from "primevue/button";
 import InputSwitch from "primevue/inputswitch";
+import ProgressSpinner from "primevue/progressspinner";
 import draggable from "vuedraggable";
 import ColorPicker from 'primevue/colorpicker';
 import PaletteCard from "@/components/PaletteCard.vue";
 
 export default {
-  components: { PaletteForm, Button, InputSwitch, draggable, ColorPicker, PaletteCard },
+  components: { PaletteForm, Button, InputSwitch, draggable, ColorPicker, PaletteCard, ProgressSpinner },
   setup() {
     const paletteStore = usePaletteStore();
     const authStore = useAuthStore();
@@ -194,6 +201,7 @@ export default {
     const selectedPalette = ref(null);
     const editableColors = ref([]);
     const closingOverlay = ref(false);
+    const isLoading = ref(true);
 
     const user = computed(() => authStore.user);
     const palettes = computed(() => paletteStore.palettes || []);
@@ -409,9 +417,17 @@ export default {
       { deep: true }
     );
 
+    watch(palettes, (newPalettes) => {
+      // Dès qu'il y a un changement dans palettes, on désactive le spinner
+      isLoading.value = false;
+    });
+
     // Récupérer les palettes lors du montage du composant
     onMounted(() => {
-      paletteStore.fetchPalettes();
+      // Utilise le callback de fetchPalettes pour désactiver le spinner une fois le chargement terminé
+      paletteStore.fetchPalettes(() => {
+        isLoading.value = false;
+      });
     });
 
     return {
@@ -443,6 +459,7 @@ export default {
       averageColor,
       onColorInput,
       insertColorAtExtreme,
+      isLoading,
     };
   },
 };
@@ -692,6 +709,12 @@ export default {
     right: -14px;
     top: 50%;
     transform: translateY(-50%);
+  }
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
   }
 
   @media (max-width: 850px) {
