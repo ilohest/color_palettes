@@ -16,29 +16,36 @@
         icon="pi pi-plus"
         class="p-button-outlined add-btn"
         @click="openCreateForm"
+         v-tooltip="'Add palette'"
       />
 
       <div class="filters">
         <!-- Toggle switch pour filtrer les palettes -->
-        <div v-if="user" class="toggle-group">
+        <div
+          v-if="user"
+          class="toggle-group"
+        >
           <span class="toggle-label left">
-            <i class="pi pi-users"></i>
+            <i class="pi pi-users" v-tooltip="'Show all palettes'"></i>
           </span>
-          <InputSwitch v-model="showUserPalettes" />
+          <ToggleSwitch  v-model="showUserPalettes" />
           <span class="toggle-label right">
-            <i class="pi pi-user"></i>
+            <i class="pi pi-user" v-tooltip="'Show your palettes'"></i>
           </span>
         </div>
   
         <!-- Toggle switch pour trier les palettes -->
-        <div class="toggle-group" v-if="palettes.length > 1">
+        <div
+          class="toggle-group"
+          v-if="palettes.length > 1"
+        >
           <span class="toggle-label left">
-            <i class="pi pi-calendar"></i>
-            <i class="pi pi-sort-amount-up"></i>
+            <i class="pi pi-calendar" v-tooltip="'Sort by: newest to oldest'"></i>
+            <i class="pi pi-sort-amount-up" v-tooltip="'Sort by: newest to oldest'"></i>
           </span>
-          <InputSwitch v-model="randomOrder" />
+          <ToggleSwitch  v-model="randomOrder" />
           <span class="toggle-label right">
-            <i class="fas fa-shuffle"></i>
+            <i class="fas fa-shuffle" v-tooltip="'Sort by: random'"></i>
           </span>
         </div>
       </div>
@@ -182,14 +189,14 @@ import { usePaletteStore } from "@/stores/usePaletteStore.js";
 import { useAuthStore } from "@/stores/useAuthStore.js";
 import PaletteForm from "@/components/PaletteForm.vue";
 import Button from "primevue/button";
-import InputSwitch from "primevue/inputswitch";
+import ToggleSwitch from "primevue/toggleswitch";
 import ProgressSpinner from "primevue/progressspinner";
 import draggable from "vuedraggable";
 import ColorPicker from 'primevue/colorpicker';
 import PaletteCard from "@/components/PaletteCard.vue";
 
 export default {
-  components: { PaletteForm, Button, InputSwitch, draggable, ColorPicker, PaletteCard, ProgressSpinner },
+  components: { PaletteForm, Button, ToggleSwitch, draggable, ColorPicker, PaletteCard, ProgressSpinner },
   setup() {
     const paletteStore = usePaletteStore();
     const authStore = useAuthStore();

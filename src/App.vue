@@ -43,15 +43,6 @@
     border: 1px solid var(--preview-border-color) !important;
   }
   :root {
-    --p-button-primary-background: #94A3B8!important;
-    --p-button-primary-border-col: #94A3B8!important;
-    --p-button-outlined-primary-border-color: #94A3B8!important;
-    --p-button-outlined-primary-color: #94A3B8!important;
-    --p-button-outlined-primary-hover-background: #cbd5e144!important;
-    --p-button-primary-hover-background: #71778070!important;
-    --p-button-primary-border-color: #94A3B8!important;
-    --p-button-primary-hover-border-color: #94A3B8!important;
-    --p-button-outlined-primary-active-background: #94A3B8!important;
     --p-button-border-radius: 50px!important;
   }
 </style>

@@ -43,7 +43,7 @@
           <Button
             v-if="localColors.length > 1"
             icon="pi pi-times"
-            class="p-button-danger"
+            class="p-button-outlined"
             @click="removeColor(index)"
           />
         </div>
@@ -142,99 +142,88 @@ export default {
 </script>
 
 <style scoped>
-.p-dialog-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1100;
-}
-
-.p-dialog {
-  background: white;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.p-dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-}
-
-.p-dialog-title {
-  font-size: 1.5rem;
-  font-family: 'Asset', sans-serif;
-}
-
-.p-dialog-header-icon {
-  cursor: pointer;
-}
-
-.p-dialog-content {
-  padding: 1rem;
-}
-
-.p-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 1rem;
-  border-top: 1px solid #ddd;
-  gap: 10px;
-}
-
-.url-input {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* Conteneur de l'aperçu des couleurs */
-.color-preview-container {
-  display: flex;
-  gap: 0;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-/* Chaque couleur occupe une largeur égale */
-.color-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  color: white;
-  font-weight: bold;
-}
-.p-dialog-header {
-  display: flex;
-  justify-content: flex-end;
-}
-.p-dialog-content{
-  gap: 10px!important;
-  display: flex!important;
-  flex-direction: column!important;
-}
-.p-inputgroup {
-  width: auto!important;
-  display: flex!important;
-  justify-content: space-between!important;
-  gap: 10px!important;
-}
-.p-inputtext {
-  width: 100%!important;
-}
+  .p-dialog-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+  }
+  .p-dialog {
+    background: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  .p-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+  }
+  .p-dialog-title {
+    font-size: 1.5rem;
+    font-family: 'Asset', sans-serif;
+  }
+  .p-dialog-header-icon {
+    cursor: pointer;
+  }
+  .p-dialog-content {
+    padding: 1rem;
+  }
+  .p-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    gap: 10px;
+  }
+  .url-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .color-preview-container {
+    display: flex;
+    gap: 0;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .color-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    color: white;
+    font-weight: bold;
+  }
+  .p-dialog-header {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .p-dialog-content{
+    gap: 10px!important;
+    display: flex!important;
+    flex-direction: column!important;
+  }
+  .p-inputgroup {
+    width: auto!important;
+    display: flex!important;
+    justify-content: space-between!important;
+    gap: 10px!important;
+  }
+  .p-inputtext {
+    width: 100%!important;
+  }
 </style>
