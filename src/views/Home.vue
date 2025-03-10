@@ -89,6 +89,7 @@
                       format="hex" 
                       showButtons
                       appendTo="body"
+                      @input="updateFullPalette" 
                       @change="updateFullPalette"
                       :style="{
                         '--preview-border-color': getTextColor(element)  // Définir la variable CSS
@@ -192,6 +193,7 @@ export default {
     const editingPalette = ref(null);
     const selectedPalette = ref(null);
     const editableColors = ref([]);
+    const closingOverlay = ref(false);
 
     const user = computed(() => authStore.user);
     const palettes = computed(() => paletteStore.palettes || []);
@@ -217,11 +219,12 @@ export default {
     // Gestion des couleurs dans l'input
     const onColorInput = (index, value) => {
       // Si la valeur n'est pas vide et ne commence pas par '#', on l'ajoute
-      if (value && value[0] !== '#') {
-        editableColors.value[index] = '#' + value;
-      } else {
-        editableColors.value[index] = value;
-      }
+      // Crée une nouvelle référence pour le tableau, ce qui force Vue à mettre à jour tous les composants qui l’utilisent (comme PaletteCard).
+      const newValue = value && value[0] !== '#' ? '#' + value : value;
+      // Créer un nouveau tableau en remplaçant uniquement l'élément à l'index donné
+      editableColors.value = editableColors.value.map((color, idx) =>
+        idx === index ? newValue : color
+      );    
     };
 
     // Calcule la couleur moyenne entre deux couleurs hexadécimales
@@ -352,8 +355,15 @@ export default {
     };
 
     // Fonction pour fermer l'overlay
-    const closeOverlay = () => {
+    const closeOverlay = async () => {
+      // On lance updateFullPalette, mais on s'assure que celle-ci ne met pas à jour selectedPalette
+      closingOverlay.value = true;
+      updateFullPalette();
       selectedPalette.value = null;
+      // On réinitialise le flag après un court délai
+      setTimeout(() => {
+        closingOverlay.value = false;
+      }, 100);
     };
 
     // Utiliser handlePaletteClick pour éviter d'ouvrir l'overlay en cliquant sur les boutons
@@ -376,7 +386,10 @@ export default {
         const updatedPalette = { ...selectedPalette.value, colors: [...editableColors.value] };
         try {
           await paletteStore.updatePalette(updatedPalette);
-          selectedPalette.value = updatedPalette;
+          // Ne mettre à jour selectedPalette que si l'overlay est toujours ouvert
+          if (!closingOverlay.value && selectedPalette.value) {
+            selectedPalette.value = { ...updatedPalette }; // Forcer la mise à jour en assignant une nouvelle référence à selectedPalette
+          }
         } catch (error) {
           console.error("Erreur lors de la mise à jour de l'ordre des couleurs :", error);
         }

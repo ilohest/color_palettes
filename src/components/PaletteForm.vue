@@ -111,13 +111,15 @@ export default {
     };
 
     const savePalette = () => {
-      const newPalette = {
-        id: null,
+      const updatedPalette = {
+        // Si props.palette existe (mode édition), on conserve son id et createdBy,
+        // sinon, on crée une nouvelle palette avec id null.
+        id: props.palette ? props.palette.id : null,
         colors: localColors.value.filter(c => c.trim() !== ""),
-        createdBy: null,
-        createdAt: new Date().toISOString(),
+        createdBy: props.palette ? props.palette.createdBy : null,
+        createdAt: props.palette ? props.palette.createdAt : new Date().toISOString(),
       };
-      emit("save", newPalette);
+      emit("save", updatedPalette);
     };
 
     const closeForm = () => {
