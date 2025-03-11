@@ -45,4 +45,13 @@
   :root {
     --p-button-border-radius: 50px!important;
   }
+  .p-inputtext,
+  .p-password-input,
+  .p-password,
+  .user-form-footer {
+    width: 100%!important;
+  }
+  .user-form-footer > .p-button {
+    width: 50%!important;
+  }
 </style>

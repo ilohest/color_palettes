@@ -1,56 +1,61 @@
+// Le composant reçoit une prop user qui contient les données de l'utilisateur
+// Si user est présent, le formulaire est en mode édition (update) et les champs sont pré-remplis avec les valeurs existantes
+// Si user est nul, le formulaire est en mode inscription (signup) et les champs commencent vides.
+
 <template>
-    <Dialog
-      v-model:visible="visible"
-      modal
-      dismissableMask
-    >
-      <template #header>
-        <div class="dialog-header">
-          <h3>{{ isEditing ? "Update Profile" : "Sign Up" }}</h3>
-          <!-- Bouton de fermeture en haut à droite -->
-        </div>
-      </template>
-  
-      <!-- Overlay spinner s'affiche par-dessus le contenu quand isSaving est true -->
-      <div v-if="isSaving" class="saving-overlay">
-      <!-- <div class="saving-overlay"> -->
-        <ProgressSpinner />
+  <Dialog
+    v-model:visible="visible"
+    modal
+    dismissableMask
+  >
+    <template #header>
+      <div class="dialog-header">
+        <h3>{{ isEditing ? "Update Profile" : "Sign Up" }}</h3>
       </div>
-  
-      <div class="user-form-content">
-        <div class="p-field">
-          <InputText v-model="localUser.fullName" placeholder="Full Name" />
-        </div>
-        <div class="p-field">
-          <InputText v-model="localUser.birthdate" placeholder="YYYY-MM-DD" />
-        </div>
-        <div class="p-field">
-          <InputText v-model="localUser.username" placeholder="User Name" />
-        </div>
-        <!-- En mode inscription, l'email est modifiable -->
-        <div class="p-field" v-if="!isEditing">
-          <InputText v-model="localUser.email" placeholder="Email" />
-        </div>
-        <!-- En mode modification, afficher l'email en lecture seule -->
-        <div class="p-field" v-else>
-          <p>{{ localUser.email }}</p>
-        </div>
-        <!-- Affichage des champs de mot de passe uniquement en mode inscription -->
-        <div class="p-field" v-if="!isEditing">
-          <Password v-model="localUser.password" placeholder="Password" :feedback="false" />
-        </div>
-        <div class="p-field" v-if="!isEditing">
-          <Password v-model="confirmPassword" placeholder="Confirm Password" :feedback="false" />
-        </div>
+    </template>
+
+    <div v-if="isSaving" class="saving-overlay">
+      <ProgressSpinner />
+    </div>
+
+    <div class="user-form-content">
+      <div class="p-field">
+        <InputText v-model="localUser.fullName" placeholder="Full Name" />
       </div>
-  
-      <template #footer>
-        <div class="user-form-footer">
-          <Button label="Save" icon="pi pi-check" @click="submitForm" />
-          <Button label="Cancel" icon="pi pi-times" class="p-button-secondary" @click="closeForm" />
-        </div>
-      </template>
-    </Dialog>
+      <div class="p-field">
+        <DatePicker 
+          v-model="localUser.dateOfBirth" 
+          dateFormat="yy-mm-dd" 
+          showIcon 
+        />
+      </div>
+      <div class="p-field">
+        <InputText v-model="localUser.username" placeholder="User Name" />
+      </div>
+      <!-- En mode inscription, l'email est modifiable -->
+      <div class="p-field" v-if="!isEditing">
+        <InputText v-model="localUser.email" placeholder="Email" />
+      </div>
+      <!-- En mode modification, afficher l'email en lecture seule -->
+      <div class="p-field" v-else>
+        <p>{{ localUser.email }}</p>
+      </div>
+      <!-- Affichage des champs de mot de passe uniquement en mode inscription -->
+      <div class="p-field" v-if="!isEditing">
+        <Password v-model="localUser.password" placeholder="Password" :feedback="false" />
+      </div>
+      <div class="p-field" v-if="!isEditing">
+        <Password v-model="confirmPassword" placeholder="Confirm Password" :feedback="false" />
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="user-form-footer">
+        <Button label="Save" icon="pi pi-check" @click="submitForm"/>
+        <Button label="Cancel" icon="pi pi-times" class="p-button-secondary" @click="closeForm" />
+      </div>
+    </template>
+  </Dialog>
 </template>
   
 <script>
@@ -60,11 +65,12 @@
   import Password from "primevue/password";
   import ProgressSpinner from "primevue/progressspinner";
   import Dialog from "primevue/dialog";
+  import DatePicker from "primevue/datepicker";
   import { useToast } from "primevue/usetoast";
-  
+
   export default {
     name: "UserForm",
-    components: { Button, InputText, Password, ProgressSpinner, Dialog },
+    components: { Button, InputText, Password, ProgressSpinner, Dialog, DatePicker },
     props: {
       user: {
         type: Object,
@@ -74,92 +80,101 @@
         type: Boolean,
         default: false,
       },
-      modelValue: {
+      visible: {
         type: Boolean,
         default: false,
       },
     },
-    emits: ["save", "close", "update:modelValue"],
+    emits: ["save", "close", "update:visible"],
     setup(props, { emit }) {
-        const visible = ref(props.modelValue);
-        const toast = useToast();
-        const isEditing = computed(() => !!props.user);
-        const confirmPassword = ref("");
+      const visible = ref(props.visible);
+      const toast = useToast();
+      const isEditing = computed(() => !!props.user); // Cette propriété calculée permet de savoir si le formulaire doit fonctionner en mode modification ou inscription.
+      const confirmPassword = ref("");
 
+      const localUser = ref({ // Le formulaire utilise un objet réactif localUser qui sert de "copie locale" des données utilisateur pour lier les champs du formulaire.
+        fullName: "",
+        dateOfBirth: null,
+        username: "",
+        email: "",
+        password: "",
+      });
 
-        const localUser = ref({
-            fullName: "",
-            birthdate: "",
-            username: "",
-            email: "",
-            password: "",
-        });
-
-        const resetLocalUser = () => {
-            localUser.value = {
-                fullName: props.user ? props.user.fullName : "",
-                birthdate: props.user ? props.user.birthdate : "",
-                username: props.user ? props.user.username : "",
-                email: props.user ? props.user.email : "",
-                password: "",
-            };
-            confirmPassword.value = "";
+      // Fonction pour réinitialiser les valeurs locales: met à jour localUser en fonction de la prop user
+      // En mode édition, les champs sont initialisés avec les valeurs de l'objet user
+      // En mode inscription, les champs sont vides
+      const resetLocalUser = () => {
+        localUser.value = {
+          fullName: props.user ? props.user.fullName : "",
+          dateOfBirth:
+            props.user && props.user.dateOfBirth && !isNaN(Date.parse(props.user.dateOfBirth))
+              ? new Date(props.user.dateOfBirth)
+              : null,
+          username: props.user ? props.user.username : "",
+          email: props.user ? props.user.email : "",
+          password: "",
         };
-        
-        const submitForm = () => {
-            if (!isEditing.value && localUser.value.password !== confirmPassword.value) {
-                // Au lieu de alert, affichez un toast d'erreur
-                toast.add({
-                    severity: "error",
-                    summary: "Erreur",
-                    detail: "Les mots de passe ne correspondent pas !",
-                    life: 3000,
-                });
-                return;
-            }
-            const dataToSave = { ...localUser.value };
-            if (isEditing.value && !dataToSave.password) {
-                delete dataToSave.password;
-            }
-            emit("save", dataToSave);
-        };
-        
-        const closeForm = () => {
-            visible.value = false;
-        };
+        confirmPassword.value = "";
+      };
+      
+      // En mode inscription, elle vérifie que le mot de passe est renseigné et correspond à la confirmation du mdp
+      // Elle prépare un objet dataToSave à partir de localUser. En mode édition, si le mot de passe est vide, il est retiré de l'objet pour éviter de forcer une modification du mot de passe.
+      // Emet un événement "save" pour que le parent (Navbar.vue) puisse traiter la sauvegarde.
+      const submitForm = () => {
+        if (!isEditing.value && localUser.value.password !== confirmPassword.value) {
+          toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Passwords do not match. Please try again.",
+            life: 3000,
+          });
+          return;
+        }
 
-        watch(
-            () => props.modelValue,
-            (newVal) => {
-                visible.value = newVal;
-            }
-        );
+        const dataToSave = { ...localUser.value };
+        if (isEditing.value && !dataToSave.password) {
+          delete dataToSave.password;
+        }
 
-        watch(visible, (newVal) => {
-            emit("update:modelValue", newVal);
-            if (!newVal) {
-                emit("close");
-            }
-        });
+        emit("save", dataToSave);
+      };
+      
+      const closeForm = () => {
+        visible.value = false;
+      };
 
-        watch(
-            () => props.user,
-            () => {
-                resetLocalUser();
-            },
-            { immediate: true }
-        );
+      watch( // met à jour la variable locale visible au chargement et lors de toute modification externe 
+        () => props.visible,
+        (newVal) => {
+          visible.value = newVal;
+        }
+      );
 
-        return {
-            visible,
-            isEditing,
-            localUser,
-            confirmPassword,
-            submitForm,
-            closeForm,
-        };
+      watch(visible, (newVal) => { // se déclenche dès que visible.value change : émet l'événement "update:visible" avec la nouvelle valeur et, si la valeur est false, émet aussi "close".
+        emit("update:visible", newVal);
+        if (!newVal) {
+          emit("close");
+        }
+      });
+
+      watch(
+        () => props.user,
+        () => {
+          resetLocalUser();
+        },
+        { immediate: true }
+      );
+
+      return {
+        visible,
+        isEditing,
+        localUser,
+        confirmPassword,
+        submitForm,
+        closeForm,
+      };
     },
-};
+  };
 </script>
   
 <style scoped>
