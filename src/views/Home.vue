@@ -184,7 +184,7 @@
 </template>
 
 <script>
-import { computed, ref, onMounted, watch } from "vue";
+import { computed, ref, onMounted, watch, getCurrentInstance } from "vue";
 import { usePaletteStore } from "@/stores/usePaletteStore.js";
 import { useAuthStore } from "@/stores/useAuthStore.js";
 import PaletteForm from "@/components/PaletteForm.vue";
@@ -209,6 +209,9 @@ export default {
     const editableColors = ref([]);
     const closingOverlay = ref(false);
     const isLoading = ref(true);
+    const instance = getCurrentInstance();
+    const confirmService = instance?.proxy.$confirm;
+    const toast = instance?.proxy.$toast;
 
     const user = computed(() => authStore.user);
     const palettes = computed(() => paletteStore.palettes || []);
@@ -335,8 +338,33 @@ export default {
     };
 
     const deletePalette = async (palette) => {
-      if (confirm("Do you really want to delete this palette ?")) {
-        await paletteStore.deletePalette(palette.id);
+      if (confirmService) {
+        confirmService.require({
+          message: "Do you really want to delete this palette?",
+          header: "Confirmation",
+          icon: "pi pi-exclamation-triangle",
+          dismissableMask: true, 
+          accept: async () => {
+            await paletteStore.deletePalette(palette.id);
+            toast.add({ 
+              severity: 'success', 
+              summary: 'Palette deleted', 
+              detail: 'The palette has been deleted successfully', 
+              life: 3000 
+            });
+          }
+        });
+      } else {
+        // Fallback au confirm natif si $confirm n'est pas disponible
+        if (confirm("Do you really want to delete this palette?")) {
+          await paletteStore.deletePalette(palette.id);
+          toast.add({ 
+            severity: 'success', 
+            summary: 'Palette deleted', 
+            detail: 'The palette has been deleted successfully', 
+            life: 3000 
+          });
+        }
       }
     };
 

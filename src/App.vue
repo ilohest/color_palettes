@@ -8,6 +8,8 @@
 <template>
   <div>
     <Navbar />
+    <Toast />
+    <ConfirmDialog />
     <router-view />
   </div>
 </template>

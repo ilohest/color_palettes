@@ -60,10 +60,10 @@
         this.$emit("view", this.palette);
       }
     },
-    mounted() {
-      console.log("User UID:", this.user ? this.user.uid : "No user");
-      console.log("Palette createdBy:", this.palette.createdBy);
-    }
+    // mounted() {
+    //   console.log("User UID:", this.user ? this.user.uid : "No user");
+    //   console.log("Palette createdBy:", this.palette.createdBy);
+    // }
 
   };
 </script>

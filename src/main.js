@@ -21,6 +21,8 @@ import ColorPicker from 'primevue/colorpicker';
 import ToastService from 'primevue/toastservice';
 import Toast from 'primevue/toast';
 import Tooltip from "primevue/tooltip";
+import ConfirmationService from 'primevue/confirmationservice';
+import ConfirmDialog from 'primevue/confirmdialog';
 
 // Création de l'application
 const app = createApp(App);
@@ -58,6 +60,7 @@ app.use(PrimeVue, {
 app.use(pinia); // ✅ Activation de Pinia
 app.use(router); // 🚀 Ajout du routeur
 app.use(ToastService);
+app.use(ConfirmationService);
 
 // Enregistrer globalement les composants
 app.component('Button', Button);
@@ -66,6 +69,7 @@ app.component('ToggleSwitch', ToggleSwitch);
 app.component('ColorPicker', ColorPicker);
 app.component('Toast', Toast);
 app.directive("tooltip", Tooltip);
+app.component('ConfirmDialog', ConfirmDialog);
 
 // Vérifier si un utilisateur est déjà connecté
 const authStore = useAuthStore();
