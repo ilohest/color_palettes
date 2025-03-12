@@ -20,17 +20,18 @@
 
     <div class="user-form-content">
       <div class="p-field">
-        <InputText v-model="localUser.fullName" placeholder="Full Name" />
+        <InputText v-model="localUser.fullName" placeholder="Full name" />
+      </div>
+      <div class="p-field">
+        <InputText v-model="localUser.username" placeholder="User name" />
       </div>
       <div class="p-field">
         <DatePicker 
           v-model="localUser.dateOfBirth" 
           dateFormat="yy-mm-dd" 
           showIcon 
+          placeholder="Date of birth" 
         />
-      </div>
-      <div class="p-field">
-        <InputText v-model="localUser.username" placeholder="User Name" />
       </div>
       <!-- En mode inscription, l'email est modifiable -->
       <div class="p-field" v-if="!isEditing">

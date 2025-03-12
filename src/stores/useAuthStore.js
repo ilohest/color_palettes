@@ -1,4 +1,4 @@
-// Gestion d’état centralisée avec Pinia.
+// Gestion de l’état d’authentification et de l’utilisateur connecté, centralisée avec Pinia.
 // Stocke l'utilisateur connecté et gère les actions d'authentificationn (connexion, déconnexion).
 //-----------------------------------------------------------------------------------------------
 
@@ -14,6 +14,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { set, ref, get } from "firebase/database";
+import User from "@/models/User";
 
 export const useAuthStore = defineStore("authStore", {
   state: () => ({
@@ -21,16 +22,22 @@ export const useAuthStore = defineStore("authStore", {
   }),
 
   actions: {
-    // Écoute les changements d'état de connexion et fusionne les infos supplémentaires depuis la DB
+    // Écoute les changements d'état de connexion et fusionne l’objet utilisateur de Firebase (user) et les infos supplémentaires depuis la DB additionalData)
     listenForAuthChanges() {
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           try {
-            // Tente de récupérer les informations supplémentaires stockées dans /users/{uid}
             const snapshot = await get(ref(db, `users/${user.uid}`));
             const additionalData = snapshot.exists() ? snapshot.val() : {};
-            // Fusionne les infos de Firebase Auth et celles de la DB
-            this.user = { ...user, ...additionalData };
+            // Convertit les données en une instance de User en utilisant la méthode statique fromFirebase
+            this.user = User.fromFirebase(user.uid, {
+              uid: user.uid,
+              ...additionalData,
+              fullName: additionalData.fullName || user.displayName || "",
+              dateOfBirth: additionalData.dateOfBirth || "",
+              username: additionalData.username || "",
+              email: user.email,
+            });
           } catch (error) {
             console.error("Erreur lors de la récupération des infos supplémentaires :", error);
             this.user = user;
@@ -41,32 +48,58 @@ export const useAuthStore = defineStore("authStore", {
       });
     },
 
-    // Connexion avec Google
+    // Connexion avec Google en utilisant Realtime Database
     async signInWithGoogle() {
-      try {
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        this.user = result.user;
-        // Optionnel : Vous pouvez sauvegarder dans la DB des informations par défaut pour un nouvel utilisateur
-        return this.user;
-      } catch (error) {
-        console.error("Erreur d'authentification via Google :", error);
-        throw error;
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const authUser = result.user;
+      const userRef = ref(db, `users/${authUser.uid}`);
+      const snapshot = await get(userRef);
+      let userProfile;
+
+      if (snapshot.exists()) {
+        // Document existant : récupérer les données enregistrées
+        userProfile = { uid: authUser.uid, ...snapshot.val() };
+      } else {
+        // Document inexistant : créer un nouvel utilisateur avec des valeurs par défaut
+        userProfile = {
+          uid: authUser.uid, 
+          fullName: authUser.displayName || "",
+          email: authUser.email,
+          dateOfBirth: "", // valeur par défaut, à compléter ultérieurement par l'utilisateur
+          username: authUser.email ? authUser.email.split("@")[0] : "",
+        };
+        // Enregistrer le nouveau profil dans la Realtime Database
+        await set(userRef, userProfile);
       }
+
+      // Mettre à jour le store
+      this.user = userProfile;
+      console.log("Store mis à jour via Google:", this.user);
     },
 
     // Connexion avec email et mot de passe
     async loginWithEmail(email, password) {
       try {
         const result = await signInWithEmailAndPassword(auth, email, password);
-        this.user = result.user;
+        // Récupérer les données supplémentaires depuis la Realtime Database
+        const userRef = ref(db, `users/${result.user.uid}`);
+        const snapshot = await get(userRef);
+        const additionalData = snapshot.exists() ? snapshot.val() : {};
+        // Mettre à jour le store en s'assurant d'avoir uid
+        this.user = {
+          uid: result.user.uid,
+          ...additionalData,
+          fullName: additionalData.fullName || result.user.displayName || "",
+          email: result.user.email,
+        };
         return this.user;
       } catch (error) {
         console.error("Erreur de connexion via email :", error);
         throw error;
       }
     },
-
+    
     // Inscription avec email et mot de passe
     async signupWithEmail(email, password, additionalData = {}) {
       try {
@@ -78,7 +111,7 @@ export const useAuthStore = defineStore("authStore", {
         // Stockage des données supplémentaires dans la DB
         await set(ref(db, `users/${result.user.uid}`), {
           fullName: additionalData.fullName || "",
-          birthdate: additionalData.birthdate || "",
+          dateOfBirth: additionalData.dateOfBirth || "",
           username: additionalData.username || "",
           email: email,
         });

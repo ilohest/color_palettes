@@ -59,7 +59,12 @@
         // Emit une action de vue lorsqu'on clique en dehors des boutons
         this.$emit("view", this.palette);
       }
+    },
+    mounted() {
+      console.log("User UID:", this.user ? this.user.uid : "No user");
+      console.log("Palette createdBy:", this.palette.createdBy);
     }
+
   };
 </script>
 

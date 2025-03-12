@@ -30,7 +30,7 @@
           @click="openUserForm"
         >
           <i class="pi pi-user"></i>
-          {{ user.displayName || user.email }}
+          {{ user.fullName || user.email }}
         </Button>
         <Button 
           icon="pi pi-sign-out" 
@@ -73,19 +73,22 @@
         </template>
         <template v-else> 
           <div class="email-login">
-            <!-- Formulaire de login avec email -->
-            <div class="p-field">
-              <InputText v-model="loginEmail" placeholder="Email" />
-            </div>
-            <div class="p-field">
-              <Password v-model="loginPassword" placeholder="Password" :feedback="false"/>
-            </div>
-            <Button 
-              label="Login" 
-              icon="pi pi-check" 
-              class="p-button-rounded" 
-              @click="loginWithEmail" 
-            />
+            <form @submit.prevent="loginWithEmail" class="email-login">
+              <!-- Formulaire de login avec email -->
+              <div class="p-field">
+                <InputText v-model="loginEmail" placeholder="Email" />
+              </div>
+              <div class="p-field">
+                <Password v-model="loginPassword" placeholder="Password" :feedback="false"/>
+              </div>
+              <Button 
+                label="Login" 
+                icon="pi pi-check" 
+                class="p-button-rounded" 
+                @click="loginWithEmail" 
+                type="submit"
+              />
+            </form>
             <p>
               Don't have an account? 
               <a href="#" @click.prevent="switchToSignup">Sign Up</a>
